@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">AquaObserver</string>
+    <string name="btn_change_critical_level">Izmijeni</string>
+    <string name="critical_level">Kriticna razina:</string>
+    <string name="max_level">Max kolicina:</string>
+    <string name="curr_level">Trenutna kolicina:</string>
+    <string name="last_updated">Zadnji dohvat:</string>
+    <string name="btn_measure_history">Povijest mjerenja</string>
+    <string name="btn_back">Natrag</string>
 </resources>
