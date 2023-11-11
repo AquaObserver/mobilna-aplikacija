@@ -4,9 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,6 +41,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         btnChangeCriticalLevel = findViewById(R.id.btn_change_critical_level)
         btnMeasurementHistory = findViewById(R.id.btn_measurement_history)
 
@@ -64,8 +69,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when(v?.id) {
             R.id.btn_change_critical_level -> {
-                this.criticalLvl = (1..100).random()
-                this.criticalLevelResultTv.text = criticalLvl.toString()
+                val popUpInflater = LayoutInflater.from(this)
+                val criticalLvlView = popUpInflater.inflate(R.layout.change_critical_level, null)
+                val newCriticalLevel = criticalLvlView.findViewById<EditText>(R.id.et_new_critical_level)
+                val addDialog = AlertDialog.Builder(this)
+
+                addDialog.setView(criticalLvlView)
+                addDialog.setPositiveButton("Ok") {
+                    dialog,_ ->
+                    this.criticalLvl = newCriticalLevel.text.toString().toInt()
+                    this.criticalLevelResultTv.text = newCriticalLevel.text
+                    Toast.makeText(this, "Kriticna razina promijenjena", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+                addDialog.setNegativeButton("Cancel") {
+                    dialog, _ ->
+                    dialog.dismiss()
+                    Toast.makeText(this, "Cancel", Toast.LENGTH_SHORT).show()
+                }
+                addDialog.create()
+                addDialog.show()
             }
             R.id.btn_measurement_history -> {
                 intent = Intent(this, MeasurementsHistory::class.java)

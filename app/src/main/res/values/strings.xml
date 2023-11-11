@@ -7,4 +7,6 @@
     <string name="last_updated">Zadnji dohvat:</string>
     <string name="btn_measure_history">Povijest mjerenja</string>
     <string name="btn_back">Natrag</string>
+    <string name="edittext_crit_lvl">Broj 1 – 100</string>
+    <string name="chagne_critical_level">Promijeni kritičnu razinu</string>
 </resources>
