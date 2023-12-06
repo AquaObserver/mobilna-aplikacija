@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -16,28 +17,23 @@ import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
-    // place holders za vars dok nema api-a
     private var criticalLvl: Int = 20
     private var maxVolume: Int = 55
-    private var currVolume: Int = 30
+    private var currVolume: Int = 60
     private val sdFormat = SimpleDateFormat("hh:mm:ss", Locale.getDefault())
     private val lastUpdated: String = sdFormat.format(Date())
 
     private lateinit var btnChangeCriticalLevel : Button
     private lateinit var btnMeasurementHistory : Button
 
-    private lateinit var criticalLevelTv: TextView
+    private lateinit var bucketProgressBar: ProgressBar
+
     private lateinit var criticalLevelResultTv: TextView
-    private lateinit var maxVolumeTv : TextView
     private lateinit var maxVolumeResultTv : TextView
-
-    private lateinit var currentVolumeTv : TextView
     private lateinit var currentVolumeResultTv : TextView
-
-    private lateinit var lastUpdatedTv : TextView
     private lateinit var lastUpdatedResultTv : TextView
+    private lateinit var bucketTv: TextView
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -45,22 +41,22 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         btnChangeCriticalLevel = findViewById(R.id.btn_change_critical_level)
         btnMeasurementHistory = findViewById(R.id.btn_measurement_history)
 
-        criticalLevelTv = findViewById(R.id.tv_critical_level)
+        bucketProgressBar = findViewById(R.id.bucket_progress)
+        bucketTv = findViewById(R.id.tv_bucket)
+
         criticalLevelResultTv = findViewById(R.id.tv_critical_level_result)
-
-        maxVolumeTv = findViewById(R.id.tv_max_volume)
         maxVolumeResultTv = findViewById(R.id.tv_max_volume_result)
-
-        currentVolumeTv = findViewById(R.id.tv_current_volume)
         currentVolumeResultTv = findViewById(R.id.tv_current_volume_result)
-
-        lastUpdatedTv = findViewById(R.id.tv_last_update)
         lastUpdatedResultTv = findViewById(R.id.tv_last_update_result)
 
-        this.criticalLevelResultTv.text = criticalLvl.toString()
-        this.maxVolumeResultTv.text = maxVolume.toString() + "L"
-        this.currentVolumeResultTv.text = currVolume.toString()
-        this.lastUpdatedResultTv.text = lastUpdated
+        criticalLevelResultTv.text = criticalLvl.toString()
+
+        maxVolumeResultTv.text = maxVolume.toString() + "L"
+        currentVolumeResultTv.text = currVolume.toString()
+        lastUpdatedResultTv.text = lastUpdated
+
+        bucketTv.text = currVolume.toString() + "%"
+        bucketProgressBar.progress = currVolume
 
         btnChangeCriticalLevel.setOnClickListener(this)
         btnMeasurementHistory.setOnClickListener(this)
