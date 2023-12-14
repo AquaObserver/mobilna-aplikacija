@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -12,6 +13,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,6 +40,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var lastUpdatedResultTv : TextView
     private lateinit var bucketTv: TextView
 
+    val BASE_URL = "http://127.0.0.1:8000/"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -55,11 +63,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         currentVolumeResultTv.text = currVolume.toString()
         lastUpdatedResultTv.text = lastUpdated
 
-        bucketTv.text = currVolume.toString() + "%"
-        bucketProgressBar.progress = currVolume
+        //bucketTv.text = currVolume.toString() + "%"
+        //bucketProgressBar.progress = currVolume
 
         btnChangeCriticalLevel.setOnClickListener(this)
         btnMeasurementHistory.setOnClickListener(this)
+
     }
 
     override fun onClick(v: View?) {
@@ -91,5 +100,38 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 startActivity(intent)
             }
         }
+    }
+
+    private fun getMyData(){
+        val retrofitBuilder= Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(BASE_URL)
+            .build()
+            .create(ApiInterface::class.java)
+
+        val retrofitData= retrofitBuilder.getData()
+
+        retrofitData.enqueue(object : Callback<List<Reading>?> {
+            override fun onResponse(
+                call: Call<List<Reading>?>,
+                response: Response<List<Reading>?>
+            ) {
+                val responseBody = response.body()!!
+                val firstValue = responseBody[0].waterLevel
+                val myStringBuilder = StringBuilder()
+
+                for(myData in responseBody) {
+                    myStringBuilder.append(myData.waterLevel)
+                    myStringBuilder.append("\n")
+                }
+                Log.d("MainActivity", "ejla" + firstValue.toString())
+                bucketTv.text  = firstValue.toString() + "%"
+                bucketProgressBar.progress = firstValue.toInt()
+            }
+
+            override fun onFailure(call: Call<List<Reading>?>, t: Throwable) {
+                Log.d("MainActivity", "onFailure: " + t.message)
+            }
+        })
     }
 }
