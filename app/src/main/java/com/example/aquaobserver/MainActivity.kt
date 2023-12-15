@@ -2,8 +2,10 @@ package com.example.aquaobserver
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -11,17 +13,23 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.lang.Math.round
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var criticalLvl: Int = 20
     private var maxVolume: Int = 55
-    private var currVolume: Int = 60
-    private val sdFormat = SimpleDateFormat("hh:mm:ss", Locale.getDefault())
-    private val lastUpdated: String = sdFormat.format(Date())
 
     private lateinit var btnChangeCriticalLevel : Button
     private lateinit var btnMeasurementHistory : Button
@@ -34,9 +42,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var lastUpdatedResultTv : TextView
     private lateinit var bucketTv: TextView
 
+    val BASE_URL = "http://10.0.2.2:8000/"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
 
         btnChangeCriticalLevel = findViewById(R.id.btn_change_critical_level)
         btnMeasurementHistory = findViewById(R.id.btn_measurement_history)
@@ -52,14 +63,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         criticalLevelResultTv.text = criticalLvl.toString()
 
         maxVolumeResultTv.text = maxVolume.toString() + "L"
-        currentVolumeResultTv.text = currVolume.toString()
-        lastUpdatedResultTv.text = lastUpdated
 
-        bucketTv.text = currVolume.toString() + "%"
-        bucketProgressBar.progress = currVolume
+
 
         btnChangeCriticalLevel.setOnClickListener(this)
         btnMeasurementHistory.setOnClickListener(this)
+
+        getMyData()
+
+
     }
 
     override fun onClick(v: View?) {
@@ -91,5 +103,58 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 startActivity(intent)
             }
         }
+    }
+
+    private fun getMyData() {
+        val retrofitBuilder = Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(BASE_URL)
+            .build()
+            .create(ApiInterface::class.java)
+
+        val retrofitData = retrofitBuilder.getData()
+
+        retrofitData.enqueue(object : Callback<MyData> {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onResponse(
+                call: Call<MyData>,
+                response: Response<MyData>
+            ) {
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+
+                    if (apiResponse != null) {
+                        val readings = apiResponse.readings
+
+                        if (readings.isNotEmpty()) {
+
+                            val lastValue = readings.last().waterLevel
+
+                            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                            val dateTime = LocalDateTime.parse(readings.last().tstz, formatter)
+                            lastUpdatedResultTv.text = String.format("%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second)
+
+
+                            Log.d("MainActivity", "First value: $lastValue")
+                            bucketTv.text = "$lastValue%"
+                            bucketProgressBar.progress = lastValue.toInt()
+
+                            currentVolumeResultTv.text = String.format("%.2f",(lastValue / 100 * maxVolume.toFloat())) + "L"
+
+                        } else {
+                            Log.d("MainActivity", "Readings list is empty.")
+                        }
+                    } else {
+                        Log.d("MainActivity", "Response body is null.")
+                    }
+                } else {
+                    Log.d("MainActivity", "Unsuccessful response: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<MyData>, t: Throwable) {
+                Log.d("MainActivity", "onFailure: ${t.message}")
+            }
+        })
     }
 }
