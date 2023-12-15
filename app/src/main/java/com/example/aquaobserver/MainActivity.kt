@@ -24,9 +24,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import android.os.Handler
+import com.example.aquaobserver.api.Reading
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
-    private var criticalLvl: Int = 20
     private var maxVolume: Int = 55
 
     private lateinit var btnChangeCriticalLevel : Button
@@ -40,7 +41,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var lastUpdatedResultTv : TextView
     private lateinit var bucketTv: TextView
 
+    private val handler = Handler()
+    private val delayMillis: Long = 10000 // 10 seconds
+
     val BASE_URL = "http://10.0.2.2:8000/"
+
+    //funkcija koja ažurira podatke svakih X sekundi
+    private val fetchThresholdRunnable = object : Runnable {
+        override fun run() {
+
+            Log.d("MainActivity", "Level updated")
+            getMyData()
+            handler.postDelayed(this, delayMillis)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +72,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         currentVolumeResultTv = findViewById(R.id.tv_current_volume_result)
         lastUpdatedResultTv = findViewById(R.id.tv_last_update_result)
 
-        criticalLevelResultTv.text = criticalLvl.toString()
+
 
         maxVolumeResultTv.text = maxVolume.toString() + "L"
 
@@ -67,7 +81,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         btnChangeCriticalLevel.setOnClickListener(this)
         btnMeasurementHistory.setOnClickListener(this)
 
-        getMyData()
+        handler.post(fetchThresholdRunnable)
 
 
     }
@@ -83,7 +97,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 addDialog.setView(criticalLvlView)
                 addDialog.setPositiveButton("Ok") {
                     dialog,_ ->
-                    //POST
+
+                    //POST za update
                     val retrofit = Retrofit.Builder()
                         .addConverterFactory(GsonConverterFactory.create())
                         .baseUrl(BASE_URL)
@@ -91,29 +106,28 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                     val apiService = retrofit.create(ApiInterface::class.java)
 
-                    val userThresholdUpdate = UserThresholdUpdate(2, newCriticalLevel.text.toString().toDouble())
+                    val response = apiService.pushThreshold(UserThresholdUpdate(newCriticalLevel.text.toString().toDouble()))
 
-                    val call: Call<UserThresholdUpdate> = apiService.updateThreshold(2, userThresholdUpdate)
-
-                    call.enqueue(object : Callback<UserThresholdUpdate> {
+                    response.enqueue(object : Callback<UserThresholdUpdate> {
                         override fun onResponse(
                             call: Call<UserThresholdUpdate>,
                             response: Response<UserThresholdUpdate>
                         ) {
                             if (response.isSuccessful) {
                                 val updatedUserThreshold = response.body()
-                                Log.d("MainActivity", "Threshold updated successfully: $updatedUserThreshold")
+                                Log.d("MainActivity", "Threshold pushed successfully: $updatedUserThreshold")
                             } else {
-                                Log.d("MainActivity", "Failed to update threshold: ${response.code()}")
+                                Log.d("MainActivity", "Failed to push threshold: ${response.code()}")
                             }
                         }
 
                         override fun onFailure(call: Call<UserThresholdUpdate>, t: Throwable) {
-                            Log.d("MainActivity", "Failed to update threshold: ${t.message}")
+                            Log.d("MainActivity", "Failed to push threshold: ${t.message}")
                         }
                     })
-                    //this.criticalLvl = newCriticalLevel.text.toString().toInt()
-                    this.criticalLevelResultTv.text = newCriticalLevel.text
+
+
+                    this.criticalLevelResultTv.text = newCriticalLevel.text.toString() + "%"
                     Toast.makeText(this, "Kriticna razina promijenjena", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
@@ -140,8 +154,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .create(ApiInterface::class.java)
 
         //GET za readings
-        //ovdje mozemo eventualno korisiti i /dailyLatest/ s POST(currentDate())
-
+        /*
         val retrofitReadingsData = retrofitBuilder.getReadings()
         retrofitReadingsData.enqueue(object : Callback<MyReadings> {
             @RequiresApi(Build.VERSION_CODES.O)
@@ -153,22 +166,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     val apiResponse = response.body()
 
                     if (apiResponse != null) {
+
                         val readings = apiResponse.readings
-
-                        if (readings.isNotEmpty()) {
-
-                            val lastValue = readings.last().waterLevel
-
-                            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-                            val dateTime = LocalDateTime.parse(readings.last().tstz, formatter)
-                            lastUpdatedResultTv.text = String.format("%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second)
-
-
-                            Log.d("MainActivity", "First value: $lastValue")
-                            bucketTv.text = "$lastValue%"
-                            bucketProgressBar.progress = lastValue.toInt()
-
-                            currentVolumeResultTv.text = String.format("%.2f",(lastValue / 100 * maxVolume.toFloat())) + "L"
 
                         } else {
                             Log.d("MainActivity", "Readings list is empty.")
@@ -182,6 +181,38 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             override fun onFailure(call: Call<MyReadings>, t: Throwable) {
+                Log.d("MainActivity", "onFailure: ${t.message}")
+            }
+        }) */
+
+        //GET za zadnje mjerenje
+        val retrofitLatestReading = retrofitBuilder.getLatestReading()
+        retrofitLatestReading.enqueue(object : Callback<Reading> {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onResponse(call: Call<Reading>, response: Response<Reading>) {
+                if (response.isSuccessful) {
+                    val latestReading = response.body()
+
+                    if (latestReading != null) {
+
+                        val lastValue = latestReading.waterLevel
+                        Log.d("MainActivity", "Latest value: $lastValue")
+                        bucketTv.text = "$lastValue%"
+                        bucketProgressBar.progress = lastValue.toInt()
+
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        val dateTime = LocalDateTime.parse(latestReading.tstz, formatter)
+                        lastUpdatedResultTv.text = String.format("%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second)
+                        currentVolumeResultTv.text = String.format("%.2f",(lastValue / 100 * maxVolume.toFloat())) + "L"
+
+                    } else {
+                        Log.d("MainActivity", "Latest reading is null.")
+                    }
+                } else {
+                    Log.d("MainActivity", "Unsuccessful response: ${response.code()}")
+                }
+            }
+            override fun onFailure(call: Call<Reading>, t: Throwable) {
                 Log.d("MainActivity", "onFailure: ${t.message}")
             }
         })
@@ -202,7 +233,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
                         val userThreshold = apiResponse.threshold
                         Log.d("MainActivity", "Threshold: $userThreshold")
-                        criticalLevelResultTv.text = userThreshold.toString()
+                        criticalLevelResultTv.text = userThreshold.toInt().toString() + "%"
 
                     } else {
                         Log.d("MainActivity", "Response body is null.")

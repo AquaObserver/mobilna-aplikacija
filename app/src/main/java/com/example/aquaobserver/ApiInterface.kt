@@ -1,6 +1,7 @@
 package com.example.aquaobserver
 
 import com.example.aquaobserver.api.MyReadings
+import com.example.aquaobserver.api.Reading
 import com.example.aquaobserver.api.UserThreshold
 import com.example.aquaobserver.api.UserThresholdUpdate
 import retrofit2.Call
@@ -15,15 +16,17 @@ import retrofit2.http.Path
 
 interface ApiInterface {
 
+    @GET("/getLatest/")
+    fun getLatestReading():Call<Reading>
+
     @GET("/readings/")
     fun getReadings(): Call<MyReadings>
 
-    @GET("/userThreshold/2")
+    @GET("/userThreshold/")
     fun getThreshold(): Call<UserThreshold>
 
-    @PUT("/userThreshold/{userId}")
-    fun updateThreshold(
-        @Path("userId") userId: Int,
+    @POST("/userThreshold/")
+    fun pushThreshold(
         @Body request: UserThresholdUpdate
     ): Call<UserThresholdUpdate>
 
