@@ -1,4 +1,4 @@
-package com.example.aquaobserver
+package com.example.aquaobserver.api
 
 data class Reading(
     val deviceId: Int,

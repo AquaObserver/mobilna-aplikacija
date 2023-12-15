@@ -1,6 +1,5 @@
 package com.example.aquaobserver
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -15,15 +14,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import com.example.aquaobserver.api.MyReadings
+import com.example.aquaobserver.api.UserThreshold
+import com.example.aquaobserver.api.UserThresholdUpdate
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.lang.Math.round
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -85,7 +83,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 addDialog.setView(criticalLvlView)
                 addDialog.setPositiveButton("Ok") {
                     dialog,_ ->
-                    this.criticalLvl = newCriticalLevel.text.toString().toInt()
+                    //POST
+                    val retrofit = Retrofit.Builder()
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .baseUrl(BASE_URL)
+                        .build()
+
+                    val apiService = retrofit.create(ApiInterface::class.java)
+
+                    val userThresholdUpdate = UserThresholdUpdate(2, newCriticalLevel.text.toString().toDouble())
+
+                    val call: Call<UserThresholdUpdate> = apiService.updateThreshold(2, userThresholdUpdate)
+
+                    call.enqueue(object : Callback<UserThresholdUpdate> {
+                        override fun onResponse(
+                            call: Call<UserThresholdUpdate>,
+                            response: Response<UserThresholdUpdate>
+                        ) {
+                            if (response.isSuccessful) {
+                                val updatedUserThreshold = response.body()
+                                Log.d("MainActivity", "Threshold updated successfully: $updatedUserThreshold")
+                            } else {
+                                Log.d("MainActivity", "Failed to update threshold: ${response.code()}")
+                            }
+                        }
+
+                        override fun onFailure(call: Call<UserThresholdUpdate>, t: Throwable) {
+                            Log.d("MainActivity", "Failed to update threshold: ${t.message}")
+                        }
+                    })
+                    //this.criticalLvl = newCriticalLevel.text.toString().toInt()
                     this.criticalLevelResultTv.text = newCriticalLevel.text
                     Toast.makeText(this, "Kriticna razina promijenjena", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
@@ -112,13 +139,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .build()
             .create(ApiInterface::class.java)
 
-        val retrofitData = retrofitBuilder.getData()
+        //GET za readings
+        //ovdje mozemo eventualno korisiti i /dailyLatest/ s POST(currentDate())
 
-        retrofitData.enqueue(object : Callback<MyData> {
+        val retrofitReadingsData = retrofitBuilder.getReadings()
+        retrofitReadingsData.enqueue(object : Callback<MyReadings> {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onResponse(
-                call: Call<MyData>,
-                response: Response<MyData>
+                call: Call<MyReadings>,
+                response: Response<MyReadings>
             ) {
                 if (response.isSuccessful) {
                     val apiResponse = response.body()
@@ -152,9 +181,42 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
             }
 
-            override fun onFailure(call: Call<MyData>, t: Throwable) {
+            override fun onFailure(call: Call<MyReadings>, t: Throwable) {
                 Log.d("MainActivity", "onFailure: ${t.message}")
             }
         })
+
+        //GET za kriticnu razinu
+        val retrofitThresholdData = retrofitBuilder.getThreshold()
+        retrofitThresholdData.enqueue(object : Callback<UserThreshold> {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onResponse(
+                call: Call<UserThreshold>,
+                response: Response<UserThreshold>
+            ) {
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+
+                    if (apiResponse != null) {
+
+
+                        val userThreshold = apiResponse.threshold
+                        Log.d("MainActivity", "Threshold: $userThreshold")
+                        criticalLevelResultTv.text = userThreshold.toString()
+
+                    } else {
+                        Log.d("MainActivity", "Response body is null.")
+                    }
+                } else {
+                    Log.d("MainActivity", "Unsuccessful response: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<UserThreshold>, t: Throwable) {
+                Log.d("MainActivity", "onFailure: ${t.message}")
+            }
+        })
+
+
     }
 }
