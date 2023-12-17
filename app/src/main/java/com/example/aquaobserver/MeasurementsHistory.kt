@@ -1,5 +1,6 @@
 package com.example.aquaobserver
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -8,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.DatePicker
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
@@ -28,9 +30,11 @@ import com.github.mikephil.charting.utils.MPPointF
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalTime
-
+import java.util.Calendar
+import java.util.Locale
 
 
 class MeasurementsHistory : AppCompatActivity() {
@@ -43,6 +47,9 @@ class MeasurementsHistory : AppCompatActivity() {
 
     val BASE_URL = "http://10.0.2.2:8000/"
 
+    private lateinit var tvDatePicker: TextView
+    private lateinit var btnDatePicker: Button
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,9 +61,40 @@ class MeasurementsHistory : AppCompatActivity() {
             startActivity(intent)
         }
 
+        tvDatePicker = findViewById(R.id.tvDate)
+        tvDatePicker.text = LocalDate.now().toString()
+        btnDatePicker = findViewById(R.id.btnDatePicker)
+
+        val myCalendar = Calendar.getInstance()
+        val datePicker = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
+            myCalendar.set(Calendar.YEAR, year)
+            myCalendar.set(Calendar.MONTH, month)
+            myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            updateLable(myCalendar)
+        }
+
+        btnDatePicker.setOnClickListener {
+
+            DatePickerDialog(this, datePicker, myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        prepareLaunch(LocalDate.now().toString())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun updateLable(myCalendar: Calendar) {
+
+        val myFormat = "yyyy-MM-dd"
+        val sdf=SimpleDateFormat(myFormat, Locale("HR"))
+        tvDatePicker.setText(sdf.format(myCalendar.time))
+        prepareLaunch(tvDatePicker.text.toString())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun prepareLaunch(date: String){
         lifecycleScope.launch {
             try {
-                val readings = getDateReading(LocalDate.now().toString())
+                val readings = getDateReading(date)
                 createLineChart(readings)
                 Log.d("MeasurementsHistory", "Water: " + readings[0].waterLevel)
             } catch (e: Exception) {
