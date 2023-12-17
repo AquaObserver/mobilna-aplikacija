@@ -1,5 +1,6 @@
 package com.example.aquaobserver
 
+import com.example.aquaobserver.api.MyDateReadings
 import com.example.aquaobserver.api.MyReadings
 import com.example.aquaobserver.api.Reading
 import com.example.aquaobserver.api.UserThreshold
@@ -21,6 +22,9 @@ interface ApiInterface {
 
     @GET("/readings/")
     fun getReadings(): Call<MyReadings>
+
+    @GET("/readings/{date}")
+    suspend fun getDateReadings(@Path("date") date: String): MyDateReadings
 
     @GET("/userThreshold/")
     fun getThreshold(): Call<UserThreshold>

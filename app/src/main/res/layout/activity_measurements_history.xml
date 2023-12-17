@@ -15,6 +15,40 @@
         android:layout_gravity="center"
         android:text="@string/btn_back"
         android:backgroundTint="@color/black"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:layout_marginBottom="70dp"
+        />
+
+
+
+        <Button
+            android:id="@+id/btn_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Odaberi datum"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"
+            android:layout_marginBottom="30dp"
+
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="16.12.2023."
+            android:layout_gravity="center"
+            android:textSize="25dp"
+            android:layout_marginBottom="80dp"/>
+
+
+
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+
+            />
+
 
 </LinearLayout>
