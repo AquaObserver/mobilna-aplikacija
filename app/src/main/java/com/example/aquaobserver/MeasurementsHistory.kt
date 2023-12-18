@@ -8,9 +8,13 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.example.aquaobserver.api.DateReading
@@ -40,15 +44,21 @@ import java.util.Locale
 class MeasurementsHistory : AppCompatActivity() {
 
     lateinit var lineChart: LineChart
-    private val xValues: List<String> = listOf("0:00", "1:00", "2:00", "3:00", "4:00", "5:00",
+    private val xValues1: List<String> = listOf("0:00", "1:00", "2:00", "3:00", "4:00", "5:00",
         "6:00", "7:00", "8:00", "9:00", "10:00", "11:00",
         "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
         "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00")
+
+    private var itemSelected: Any? = null
+    private var GlobalStartHour = 0
+    private var GlobalEndHour = 0
 
     val BASE_URL = "http://10.0.2.2:8000/"
 
     private lateinit var tvDatePicker: TextView
     private lateinit var btnDatePicker: Button
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +75,7 @@ class MeasurementsHistory : AppCompatActivity() {
         tvDatePicker.text = LocalDate.now().toString()
         btnDatePicker = findViewById(R.id.btnDatePicker)
 
+
         val myCalendar = Calendar.getInstance()
         val datePicker = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
             myCalendar.set(Calendar.YEAR, year)
@@ -79,6 +90,30 @@ class MeasurementsHistory : AppCompatActivity() {
         }
 
         prepareLaunch(LocalDate.now().toString())
+
+        val items = listOf(
+            "Cijeli dan",
+            "00:00 do 01:00", "01:00 do 02:00", "02:00 do 03:00", "03:00 do 04:00", "04:00 do 05:00",
+            "05:00 do 06:00", "06:00 do 07:00", "07:00 do 08:00", "08:00 do 09:00", "09:00 do 10:00",
+            "10:00 do 11:00", "11:00 do 12:00", "12:00 do 13:00", "13:00 do 14:00", "14:00 do 15:00",
+            "15:00 do 16:00", "16:00 do 17:00", "17:00 do 18:00", "18:00 do 19:00", "19:00 do 20:00",
+            "20:00 do 21:00", "21:00 do 22:00", "22:00 do 23:00", "23:00 do 24:00"
+        )
+
+        val autoComplete : AutoCompleteTextView = findViewById(R.id.auto_complete)
+
+        val adapter = ArrayAdapter(this, R.layout.list_item,items)
+
+        autoComplete.setAdapter(adapter)
+
+        autoComplete.onItemClickListener = AdapterView.OnItemClickListener {
+                adapterView, view, i, l ->
+
+            itemSelected = adapterView.getItemAtPosition(i)
+            Toast.makeText(this, "Item: $itemSelected", Toast.LENGTH_SHORT).show()
+            prepareLaunch(tvDatePicker.text.toString())
+            lineChart.invalidate()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -88,6 +123,9 @@ class MeasurementsHistory : AppCompatActivity() {
         val sdf=SimpleDateFormat(myFormat, Locale("HR"))
         tvDatePicker.setText(sdf.format(myCalendar.time))
         prepareLaunch(tvDatePicker.text.toString())
+
+
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -96,7 +134,6 @@ class MeasurementsHistory : AppCompatActivity() {
             try {
                 val readings = getDateReading(date)
                 createLineChart(readings)
-                Log.d("MeasurementsHistory", "Water: " + readings[0].waterLevel)
             } catch (e: Exception) {
                 Log.e("MeasurementsHistory", "Error: ${e.message}")
             }
@@ -105,18 +142,18 @@ class MeasurementsHistory : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createLineChart(readings: List<DateReading>) {
+
         lineChart = findViewById(R.id.chart)
         lineChart.axisRight.setDrawLabels(false)
         lineChart.description = null
+        lineChart.highlightValue(null)
+
+
 
         val xAxis: XAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.valueFormatter = IndexAxisValueFormatter(xValues)
         xAxis.axisLineColor = Color.BLACK
         xAxis.axisLineWidth = 2f
-        xAxis.axisMinimum = 0f
-        xAxis.axisMaximum = 24f
-        xAxis.labelCount = 6
         xAxis.textSize = 13f
 
         val yAxis: YAxis = lineChart.axisLeft
@@ -130,13 +167,61 @@ class MeasurementsHistory : AppCompatActivity() {
 
         val entries1: MutableList<Entry> = mutableListOf()
 
-        readings.forEachIndexed { index, reading ->
-            val time = LocalTime.parse(reading.time)
-            if (time.minute == 0 && time.second == 0 || reading.time == "23:58:00") {
-                val hour = time.hour.toFloat() + (time.minute.toFloat() / 60f) + (time.second.toFloat() / 3600f)
-                entries1.add(Entry(hour, reading.waterLevel.toFloat()))
+        if(itemSelected == "Cijeli dan" || itemSelected == null){
+
+            xAxis.valueFormatter = IndexAxisValueFormatter(xValues1)
+            xAxis.axisMinimum = 0f
+            xAxis.axisMaximum = 24f
+            xAxis.labelCount = 6
+
+            readings.forEachIndexed { index, reading ->
+                val time = LocalTime.parse(reading.time)
+                if (time.minute == 0 && time.second == 0 || reading.time == "23:58:00") {
+                    val hour = time.hour.toFloat() + (time.minute.toFloat() / 60f) + (time.second.toFloat() / 3600f)
+                    entries1.add(Entry(hour, reading.waterLevel.toFloat()))
+                }
             }
+        } else{
+
+            val regexPattern = Regex("""(\d{2}):\d{2} do (\d{2}):\d{2}""")
+            val matchResult = regexPattern.find(itemSelected.toString())
+            val (startHour, endHour )= matchResult?.destructured?.let { (start, end) ->
+                Pair(start.toInt(), end.toInt())
+            } ?: run { return }
+
+            GlobalEndHour = endHour
+            GlobalStartHour = startHour
+            var xValues2: List<String> = mutableListOf<String>().apply {
+                for (minute in 0..59 step 2) {
+                    add(String.format("%02d:%02d", startHour, minute))
+                }
+                add(String.format("%02d:00", endHour))
+            }
+            Log.d("MeasurementsHistory", "V: " + xValues2.toString())
+            xAxis.valueFormatter = IndexAxisValueFormatter(xValues2)
+            xAxis.axisMinimum = 0f
+            xAxis.axisMaximum = 30f
+            xAxis.labelCount = 6
+
+            readings.forEachIndexed { index, reading ->
+                val time = LocalTime.parse(reading.time)
+                if (time.hour == startHour || (time.hour == endHour && time.minute == 0)) {
+                    if(time.minute == 0) {
+                        if(time.hour == startHour){
+                            entries1.add(Entry(0f, reading.waterLevel.toFloat()))
+                        }else{
+                            entries1.add(Entry(30f, reading.waterLevel.toFloat()))
+                        }
+                    }else {
+                        entries1.add(Entry(time.minute.toFloat() / 2, reading.waterLevel.toFloat()))
+                    }
+                }
+
+            }
+
         }
+
+
 
         val dataSet1 = LineDataSet(entries1, "Razina vode")
         dataSet1.setDrawValues(false)
@@ -151,12 +236,12 @@ class MeasurementsHistory : AppCompatActivity() {
         legend.yOffset = 50f
         legend.xOffset = 90f
 
-        // Set a custom MarkerView
-        val markerView = CustomMarkerView(this, R.layout.marker_view)
+
+        var markerView:CustomMarkerView = CustomMarkerView(this, R.layout.marker_view)
         markerView.chartView = lineChart
         lineChart.marker = markerView
 
-        // Set an OnChartValueSelectedListener to handle value selection events
+
         lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onValueSelected(e: Entry?, h: Highlight?) {
                 if (e != null) {
@@ -167,7 +252,6 @@ class MeasurementsHistory : AppCompatActivity() {
             }
 
             override fun onNothingSelected() {
-                // Handle when nothing is selected
             }
         })
 
@@ -198,27 +282,40 @@ class MeasurementsHistory : AppCompatActivity() {
     }
 
     private fun calculateTimeFromEntry(entryX: Float): String {
-        val hour = entryX.toInt()
-        val minute = ((entryX - hour) * 60).toInt()
-        return String.format("%02d:%02d:00", hour, minute)
+        if(itemSelected == "Cijeli dan" || itemSelected == null) {
+            val hour = entryX.toInt()
+            val minute = ((entryX - hour) * 60).toInt()
+            return String.format("%02d:%02d:00", hour, minute)
+        } else{
+            if(entryX == 30f){
+                val hour = GlobalEndHour
+                val minute = 0
+                return String.format("%02d:%02d:00", hour, minute)
+            }
+            else{
+                val hour = GlobalStartHour
+                val minute = (entryX * 2).toInt()
+                return String.format("%02d:%02d:00", hour, minute)
+            }
+
+        }
     }
 }
 
 class CustomMarkerView(context: Context, layoutResource: Int) : MarkerView(context, layoutResource) {
-    private val tvContent: TextView = findViewById(R.id.tvContent)
 
+    private val tvContent: TextView = findViewById(R.id.tvContent)
     fun setEntry(entry: Entry, time: String) {
-        //tvContent.text = String.format("Time: %s\nWater Level: %.2f", time, entry.y.toFloat())
         tvContent.text = "Vrijeme: ${time} \nRazina vode: ${entry.y.toString()}%"
         Log.d("MeasurementsHistory", "E " + entry.y)
     }
 
+
+
     override fun refreshContent(entry: Entry?, highlight: Highlight?) {
-        // Do nothing, we handle content in setEntry method
     }
 
     override fun getOffset(): MPPointF {
-        // Adjust the offset as needed to properly position the MarkerView
         return MPPointF(-width / 2f, -height.toFloat())
     }
 }

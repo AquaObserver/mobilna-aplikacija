@@ -6,6 +6,7 @@
     tools:context=".MeasurementsHistory"
     android:background="@color/backgroundColor"
     android:orientation="vertical"
+    android:focusableInTouchMode="true"
     android:padding="8dp">
 
     <Button
@@ -29,7 +30,7 @@
             android:text="Odaberi datum"
             android:backgroundTint="@color/black"
             android:textColor="@color/white"
-            android:layout_marginBottom="30dp"
+            android:layout_marginBottom="20dp"
 
             />
         <TextView
@@ -39,9 +40,25 @@
 
             android:layout_gravity="center"
             android:textSize="25dp"
-            android:layout_marginBottom="80dp"/>
+            android:layout_marginBottom="15dp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+            >
+
+            <AutoCompleteTextView
+                android:id="@+id/auto_complete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Odaberite interval prikaza"
+                android:inputType="none"/>
 
 
+
+        </com.google.android.material.textfield.TextInputLayout>
 
 
         <com.github.mikephil.charting.charts.LineChart
