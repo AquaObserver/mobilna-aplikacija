@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -57,7 +58,7 @@ class MeasurementsHistory : AppCompatActivity() {
 
     private lateinit var tvDatePicker: TextView
     private lateinit var btnDatePicker: Button
-
+    private lateinit var tvInvalidDate: TextView
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -74,7 +75,7 @@ class MeasurementsHistory : AppCompatActivity() {
         tvDatePicker = findViewById(R.id.tvDate)
         tvDatePicker.text = LocalDate.now().toString()
         btnDatePicker = findViewById(R.id.btnDatePicker)
-
+        tvInvalidDate = findViewById(R.id.tvInvalidDate)
 
         val myCalendar = Calendar.getInstance()
         val datePicker = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
@@ -144,6 +145,22 @@ class MeasurementsHistory : AppCompatActivity() {
     private fun createLineChart(readings: List<DateReading>) {
 
         lineChart = findViewById(R.id.chart)
+
+
+        if (readings.isEmpty()) {
+            // If the list is empty, hide the LineChart
+            lineChart.visibility = View.GONE
+            tvInvalidDate.visibility = View.VISIBLE
+            lineChart.invalidate()
+            return
+        } else {
+            // If the list is not empty, make sure LineChart is visible
+            lineChart.visibility = View.VISIBLE
+            tvInvalidDate.visibility = View.GONE
+            lineChart.invalidate()
+        }
+
+
         lineChart.axisRight.setDrawLabels(false)
         lineChart.description = null
         lineChart.highlightValue(null)

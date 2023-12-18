@@ -1,6 +1,7 @@
 package com.example.aquaobserver
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -25,6 +26,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import android.os.Handler
+import androidx.core.content.ContextCompat
 import com.example.aquaobserver.api.Reading
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -40,6 +42,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var currentVolumeResultTv : TextView
     private lateinit var lastUpdatedResultTv : TextView
     private lateinit var bucketTv: TextView
+    private lateinit var tvCriticalIndicator: TextView
 
     private val handler = Handler()
     private val delayMillis: Long = 10000 // 10 seconds
@@ -72,7 +75,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         currentVolumeResultTv = findViewById(R.id.tv_current_volume_result)
         lastUpdatedResultTv = findViewById(R.id.tv_last_update_result)
 
-
+        tvCriticalIndicator = findViewById(R.id.tvCriticalIndicator)
 
         maxVolumeResultTv.text = maxVolume.toString() + "L"
 
@@ -130,6 +133,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     this.criticalLevelResultTv.text = newCriticalLevel.text.toString() + "%"
                     Toast.makeText(this, "Kriticna razina promijenjena", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
+                    criticalLevelCase()
                 }
                 addDialog.setNegativeButton("Cancel") {
                     dialog, _ ->
@@ -199,6 +203,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         Log.d("MainActivity", "Latest value: $lastValue")
                         bucketTv.text = "$lastValue%"
                         bucketProgressBar.progress = lastValue.toInt()
+                        criticalLevelCase()
 
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
                         val dateTime = LocalDateTime.parse(latestReading.tstz, formatter)
@@ -234,6 +239,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         val userThreshold = apiResponse.threshold
                         Log.d("MainActivity", "Threshold: $userThreshold")
                         criticalLevelResultTv.text = userThreshold.toInt().toString() + "%"
+                        criticalLevelCase()
 
                     } else {
                         Log.d("MainActivity", "Response body is null.")
@@ -248,6 +254,36 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         })
 
-
     }
+    fun criticalLevelCase() {
+        val criticalLevelText = criticalLevelResultTv.text?.toString()
+        val bucketValueText = bucketTv.text?.toString()
+
+        if (!criticalLevelText.isNullOrBlank() && !bucketValueText.isNullOrBlank()) {
+            try {
+                val criticalLevel = extractNumericValue(criticalLevelText)
+                val bucketValue = extractNumericValue(bucketValueText)
+                if (criticalLevel > bucketValue) {
+                    tvCriticalIndicator.visibility = View.VISIBLE
+                    bucketTv.setTextColor(Color.parseColor("#FF0000"))
+                } else {
+                    tvCriticalIndicator.visibility = View.GONE
+                    bucketTv.setTextColor(Color.parseColor("#000000"))
+                }
+            } catch (e: NumberFormatException) {
+                Log.e("MainActivity", "Error converting text to float: $e")
+                tvCriticalIndicator.visibility = View.GONE
+
+            }
+        } else {
+            tvCriticalIndicator.visibility = View.GONE
+        }
+    }
+
+    private fun extractNumericValue(text: String): Float {
+        val regex = Regex("\\d+")
+        val matchResult = regex.find(text)
+        return matchResult?.value?.toFloat() ?: throw NumberFormatException("Invalid numeric value")
+    }
+
 }

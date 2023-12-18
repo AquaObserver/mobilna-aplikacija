@@ -69,6 +69,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+
         <TextView
             android:id="@+id/tv_bucket"
             android:layout_width="wrap_content"
@@ -79,6 +81,28 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="120dp"
+        android:paddingVertical="10dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvCriticalIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kritična razina!"
+            android:textColor="#FF0000"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:visibility="gone"
+            />
+
+    </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -86,6 +110,8 @@
         android:orientation="horizontal"
         android:paddingHorizontal="120dp"
         android:paddingVertical="10dp">
+
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
