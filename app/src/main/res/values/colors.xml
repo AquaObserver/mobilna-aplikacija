@@ -6,4 +6,5 @@
     <color name="titleColor">#1AA4C2</color>
     <color name="buttonColor">#FF4081</color>
     <color name="bottom_text_color">#D9D9D9</color>
+    <color name="criticalRed">#FF0000</color>
 </resources>

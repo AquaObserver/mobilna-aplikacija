@@ -69,6 +69,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+
         <TextView
             android:id="@+id/tv_bucket"
             android:layout_width="wrap_content"
@@ -79,13 +81,39 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="120dp"
+        android:paddingVertical="10dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvCriticalIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kritična razina!"
+            android:textColor="#FF0000"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:visibility="gone"
+            />
+
+    </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingHorizontal="120dp"
-        android:paddingVertical="10dp">
+        android:paddingVertical="10dp"
+
+        android:visibility="gone">
+
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -104,7 +132,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingHorizontal="100dp"
-        android:paddingVertical="10dp">
+        android:paddingVertical="10dp"
+
+        android:visibility="gone">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -128,13 +158,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/last_updated"
-            android:textSize="14sp" />
+            android:textSize="17sp" />
         <TextView
             android:id="@+id/tv_last_update_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="end"
-            android:textSize="14sp" />
+            android:textSize="16sp"
+            android:layout_marginLeft="1sp"/>
+
     </LinearLayout>
 
     <Button

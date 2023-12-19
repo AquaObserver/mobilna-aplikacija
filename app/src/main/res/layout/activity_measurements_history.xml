@@ -6,6 +6,7 @@
     tools:context=".MeasurementsHistory"
     android:background="@color/backgroundColor"
     android:orientation="vertical"
+    android:focusableInTouchMode="true"
     android:padding="8dp">
 
     <Button
@@ -15,6 +16,66 @@
         android:layout_gravity="center"
         android:text="@string/btn_back"
         android:backgroundTint="@color/black"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:layout_marginBottom="70dp"
+        />
+
+
+
+        <Button
+            android:id="@+id/btnDatePicker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Odaberi datum"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"
+            android:layout_marginBottom="20dp"
+
+            />
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_gravity="center"
+            android:textSize="25dp"
+            android:layout_marginBottom="15dp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+            >
+
+            <AutoCompleteTextView
+                android:id="@+id/auto_complete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Odaberite interval prikaza"
+                android:inputType="none"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/tvInvalidDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Za odabrani datum ne postoje mjerenja"
+        android:textColor="#FF0000"
+        android:textSize="36sp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_marginTop="60dp"
+        android:visibility="gone" />
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+
+            />
+
 
 </LinearLayout>
