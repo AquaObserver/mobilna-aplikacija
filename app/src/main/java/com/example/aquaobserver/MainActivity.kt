@@ -2,6 +2,8 @@ package com.example.aquaobserver
 
 import android.content.Intent
 import android.os.Build
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -25,7 +27,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import android.os.Handler
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.example.aquaobserver.api.Reading
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.iid.FirebaseInstanceIdReceiver
+import com.google.firebase.iid.internal.FirebaseInstanceIdInternal
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var maxVolume: Int = 55
@@ -46,10 +54,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     val BASE_URL = "http://10.0.2.2:8000/"
 
-    //funkcija koja ažurira podatke svakih X sekundi
     private val fetchThresholdRunnable = object : Runnable {
         override fun run() {
-
             Log.d("MainActivity", "Level updated")
             getMyData()
             handler.postDelayed(this, delayMillis)
@@ -59,7 +65,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
 
         btnChangeCriticalLevel = findViewById(R.id.btn_change_critical_level)
         btnMeasurementHistory = findViewById(R.id.btn_measurement_history)
@@ -72,18 +77,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         currentVolumeResultTv = findViewById(R.id.tv_current_volume_result)
         lastUpdatedResultTv = findViewById(R.id.tv_last_update_result)
 
-
-
         maxVolumeResultTv.text = maxVolume.toString() + "L"
-
-
 
         btnChangeCriticalLevel.setOnClickListener(this)
         btnMeasurementHistory.setOnClickListener(this)
 
+        askNotificationPermission()
+
         handler.post(fetchThresholdRunnable)
 
-
+        /* FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("token-token", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+            val token = task.result
+            Log.d("token-token", token)
+        }) */
     }
 
     override fun onClick(v: View?) {
@@ -185,7 +195,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }) */
 
-        //GET za zadnje mjerenje
         val retrofitLatestReading = retrofitBuilder.getLatestReading()
         retrofitLatestReading.enqueue(object : Callback<Reading> {
             @RequiresApi(Build.VERSION_CODES.O)
@@ -217,7 +226,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         })
 
-        //GET za kriticnu razinu
         val retrofitThresholdData = retrofitBuilder.getThreshold()
         retrofitThresholdData.enqueue(object : Callback<UserThreshold> {
             @RequiresApi(Build.VERSION_CODES.O)
@@ -227,10 +235,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             ) {
                 if (response.isSuccessful) {
                     val apiResponse = response.body()
-
                     if (apiResponse != null) {
-
-
                         val userThreshold = apiResponse.threshold
                         Log.d("MainActivity", "Threshold: $userThreshold")
                         criticalLevelResultTv.text = userThreshold.toInt().toString() + "%"
@@ -247,7 +252,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 Log.d("MainActivity", "onFailure: ${t.message}")
             }
         })
+    }
 
+    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("notify permission", "can show notifications")
+        } else {
+            // TODO: Inform user that your app will not show notifications.
+            Log.d("notify permission", "can not show notifications")
+        }
+    }
 
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM can send notifications
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 }

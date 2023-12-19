@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "489677408795",
+    "project_id": "aquaobserver-49185",
+    "storage_bucket": "aquaobserver-49185.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:489677408795:android:2013da54c0c4e8acfac6be",
+        "android_client_info": {
+          "package_name": "com.example.aquaobserver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACB457_Xc2Hmbv0XAqNhSPelENL12AtwU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
