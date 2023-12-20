@@ -90,14 +90,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         handler.post(fetchThresholdRunnable)
 
-        /* FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Log.w("token-token", "Fetching FCM registration token failed", task.exception)
                 return@OnCompleteListener
             }
             val token = task.result
             Log.d("token-token", token)
-        }) */
+        })
     }
 
     override fun onClick(v: View?) {

@@ -185,7 +185,6 @@ class MeasurementsHistory : AppCompatActivity() {
         val entries1: MutableList<Entry> = mutableListOf()
 
         if(itemSelected == "Cijeli dan" || itemSelected == null){
-
             xAxis.valueFormatter = IndexAxisValueFormatter(xValues1)
             xAxis.axisMinimum = 0f
             xAxis.axisMaximum = 24f
@@ -193,13 +192,12 @@ class MeasurementsHistory : AppCompatActivity() {
 
             readings.forEachIndexed { index, reading ->
                 val time = LocalTime.parse(reading.time)
-                if (time.minute == 0 && time.second == 0 || reading.time == "23:58:00") {
+                if (time.minute == 0 || reading.time == "23:58:00") {
                     val hour = time.hour.toFloat() + (time.minute.toFloat() / 60f) + (time.second.toFloat() / 3600f)
                     entries1.add(Entry(hour, reading.waterLevel.toFloat()))
                 }
             }
-        } else{
-
+        } else {
             val regexPattern = Regex("""(\d{2}):\d{2} do (\d{2}):\d{2}""")
             val matchResult = regexPattern.find(itemSelected.toString())
             val (startHour, endHour )= matchResult?.destructured?.let { (start, end) ->
