@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -60,6 +61,18 @@ class MeasurementsHistory : AppCompatActivity() {
     private lateinit var btnDatePicker: Button
     private lateinit var tvInvalidDate: TextView
 
+    private val handler = Handler()
+    private val delayMillis: Long = 10000 // 10 seconds
+
+    private val fetchThresholdRunnable = object : Runnable {
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun run() {
+            Log.d("MeasurementsHistory", "Update")
+            prepareLaunch(tvDatePicker.text.toString())
+            handler.postDelayed(this, delayMillis)
+        }
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,7 +103,7 @@ class MeasurementsHistory : AppCompatActivity() {
             DatePickerDialog(this, datePicker, myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        prepareLaunch(LocalDate.now().toString())
+
 
         val items = listOf(
             "Cijeli dan",
@@ -107,14 +120,21 @@ class MeasurementsHistory : AppCompatActivity() {
 
         autoComplete.setAdapter(adapter)
 
-        autoComplete.onItemClickListener = AdapterView.OnItemClickListener {
-                adapterView, view, i, l ->
+        val currentHour = (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1) % 24
+        val defaultHourRange = String.format("%02d:00 do %02d:00", currentHour, (currentHour + 1) % 24)
+        autoComplete.setText(defaultHourRange, false)
 
-            itemSelected = adapterView.getItemAtPosition(i)
+        autoComplete.onItemClickListener = AdapterView.OnItemClickListener { _, _, _, _ ->
+            itemSelected = autoComplete.text.toString()
             Toast.makeText(this, "Item: $itemSelected", Toast.LENGTH_SHORT).show()
             prepareLaunch(tvDatePicker.text.toString())
             lineChart.invalidate()
         }
+        itemSelected = autoComplete.text.toString()
+        prepareLaunch(LocalDate.now().toString())
+
+        handler.post(fetchThresholdRunnable)
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -207,7 +227,7 @@ class MeasurementsHistory : AppCompatActivity() {
             GlobalEndHour = endHour
             GlobalStartHour = startHour
             var xValues2: List<String> = mutableListOf<String>().apply {
-                for (minute in 0..59 step 2) {
+                for (minute in 0..59 step 1) {
                     add(String.format("%02d:%02d", startHour, minute))
                 }
                 add(String.format("%02d:00", endHour))
@@ -215,7 +235,7 @@ class MeasurementsHistory : AppCompatActivity() {
             Log.d("MeasurementsHistory", "V: " + xValues2.toString())
             xAxis.valueFormatter = IndexAxisValueFormatter(xValues2)
             xAxis.axisMinimum = 0f
-            xAxis.axisMaximum = 30f
+            xAxis.axisMaximum = 60f
             xAxis.labelCount = 6
 
             readings.forEachIndexed { index, reading ->
@@ -223,12 +243,12 @@ class MeasurementsHistory : AppCompatActivity() {
                 if (time.hour == startHour || (time.hour == endHour && time.minute == 0)) {
                     if(time.minute == 0) {
                         if(time.hour == startHour){
-                            entries1.add(Entry(0f, reading.waterLevel.toFloat()))
+                            entries1.add(Entry(0f + time.second.toFloat()/60f, reading.waterLevel.toFloat()))
                         }else{
-                            entries1.add(Entry(30f, reading.waterLevel.toFloat()))
+                            entries1.add(Entry(60f + time.second.toFloat()/60f, reading.waterLevel.toFloat()))
                         }
                     }else {
-                        entries1.add(Entry(time.minute.toFloat() / 2, reading.waterLevel.toFloat()))
+                        entries1.add(Entry(time.minute.toFloat() + time.second.toFloat()/60f, reading.waterLevel.toFloat()))
                     }
                 }
 
@@ -302,15 +322,17 @@ class MeasurementsHistory : AppCompatActivity() {
             val minute = ((entryX - hour) * 60).toInt()
             return String.format("%02d:%02d:00", hour, minute)
         } else{
-            if(entryX == 30f){
+            if(entryX == 60f){
                 val hour = GlobalEndHour
                 val minute = 0
-                return String.format("%02d:%02d:00", hour, minute)
+                val seconds = (((entryX % 1) * 100) * 0.6).toInt()
+                return String.format("%02d:%02d:%02d", hour, minute, seconds)
             }
             else{
                 val hour = GlobalStartHour
-                val minute = (entryX * 2).toInt()
-                return String.format("%02d:%02d:00", hour, minute)
+                val minute = entryX.toInt()
+                val seconds = (((entryX % 1) * 100) * 0.6).toInt()
+                return String.format("%02d:%02d:%02d", hour, minute, seconds)
             }
 
         }
