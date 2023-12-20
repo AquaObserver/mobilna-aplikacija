@@ -5,6 +5,7 @@ import com.example.aquaobserver.api.MyReadings
 import com.example.aquaobserver.api.Reading
 import com.example.aquaobserver.api.UserThreshold
 import com.example.aquaobserver.api.UserThresholdUpdate
+import com.example.aquaobserver.api.DeviceToken
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -16,7 +17,6 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface ApiInterface {
-
     @GET("/getLatest/")
     fun getLatestReading():Call<Reading>
 
@@ -34,4 +34,8 @@ interface ApiInterface {
         @Body request: UserThresholdUpdate
     ): Call<UserThresholdUpdate>
 
+    @POST("/registerDevice/")
+    fun postRegisterDevice(
+        @Body request: DeviceToken
+    ): Call<DeviceToken>
 }

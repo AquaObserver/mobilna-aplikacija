@@ -168,8 +168,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .build()
             .create(ApiInterface::class.java)
 
-        //GET za readings
-        /*
+        /*GET za readings
         val retrofitReadingsData = retrofitBuilder.getReadings()
         retrofitReadingsData.enqueue(object : Callback<MyReadings> {
             @RequiresApi(Build.VERSION_CODES.O)
@@ -290,8 +289,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val regex = Regex("\\d+")
         val matchResult = regex.find(text)
         return matchResult?.value?.toFloat() ?: throw NumberFormatException("Invalid numeric value")
-    }
-
     }
 
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->

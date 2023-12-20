@@ -10,10 +10,18 @@ import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import com.example.aquaobserver.api.DeviceToken
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+    val BASE_URL = "http://10.0.2.2:8000/"
+
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // super.onMessageReceived(remoteMessage)
         Log.d("FCM", "From: ${remoteMessage.from}")
@@ -57,5 +65,35 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         remoteView.setTextViewText(R.id.notification_message, message)
         remoteView.setImageViewResource(R.id.notification_logo, R.drawable.logo)
         return remoteView
+    }
+
+    override fun onNewToken(token: String) {
+        Log.d("device-new-token", "refreshedToken: $token")
+        sendRegistrationToServer(token)
+    }
+
+    private fun sendRegistrationToServer(token: String) {
+        val retrofit = Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(BASE_URL)
+            .build()
+        val apiService = retrofit.create(ApiInterface::class.java)
+        val response = apiService.postRegisterDevice(DeviceToken(token))
+        response.enqueue(object : Callback<DeviceToken> {
+            override fun onResponse(
+                call: Call<DeviceToken>,
+                response: Response<DeviceToken>
+            ) {
+                if (response.isSuccessful) {
+                    Log.d("device-token-post", "Threshold pushed successfully: ${response.body()}")
+                } else {
+                    Log.d("device-token-post", "${response.code()} - ${response.message()} || ${response.body()}")
+                }
+            }
+
+            override fun onFailure(call: Call<DeviceToken>, t: Throwable) {
+                Log.d("device-token-post", "Failed to post device token. Unexpected network error.")
+            }
+        })
     }
 }
