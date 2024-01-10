@@ -1,5 +1,6 @@
 package com.example.aquaobserver
 
+import com.example.aquaobserver.api.Calibrate
 import com.example.aquaobserver.api.MyDateReadings
 import com.example.aquaobserver.api.MyReadings
 import com.example.aquaobserver.api.Reading
@@ -38,4 +39,7 @@ interface ApiInterface {
     fun postRegisterDevice(
         @Body request: DeviceToken
     ): Call<DeviceToken>
+
+    @GET("/calibrate/")
+    fun calibrate(): Call<Calibrate>
 }

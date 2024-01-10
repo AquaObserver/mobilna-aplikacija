@@ -20,15 +20,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-    val BASE_URL = "http://10.0.2.2:8000/"
+    val BASE_URL = "https://polliwog-enormous-walrus.ngrok-free.app/"
+    // val BASE_URL = "http://10.0.2.2:8000/"
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        // super.onMessageReceived(remoteMessage)
-        Log.d("FCM", "From: ${remoteMessage.from}")
-        Log.d("FCM", "${remoteMessage.notification!!.body!!} ${remoteMessage.notification!!.title!!}")
-
         remoteMessage.notification?.let {
-            Log.d("FCM", "Message Notification Body: ${it.body}")
             generateNotification(it.title!!, it.body!!)
         }
     }
@@ -37,7 +33,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
-
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         var notificationBuilder = NotificationCompat.Builder(this.applicationContext, "fcm_default_channel")
             .setSmallIcon(R.drawable.logo)
@@ -49,7 +44,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
         notificationBuilder = notificationBuilder.setContent(getRemoteView(title, message))
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel("fcm_default_channel", "com.example.aquaobserver", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(notificationChannel)
@@ -68,11 +62,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onNewToken(token: String) {
-        Log.d("device-new-token", "refreshedToken: $token")
-        sendRegistrationToServer(token)
-    }
-
-    private fun sendRegistrationToServer(token: String) {
         val retrofit = Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(BASE_URL)
@@ -90,7 +79,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     Log.d("device-token-post", "${response.code()} - ${response.message()} || ${response.body()}")
                 }
             }
-
             override fun onFailure(call: Call<DeviceToken>, t: Throwable) {
                 Log.d("device-token-post", "Failed to post device token. Unexpected network error.")
             }

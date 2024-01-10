@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,7 +8,8 @@
     android:background="@color/backgroundColor"
     android:orientation="vertical"
     android:focusableInTouchMode="true"
-    android:padding="8dp">
+    android:paddingVertical="20dp"
+    android:paddingHorizontal="10dp">
 
     <Button
         android:id="@+id/btn_back"
@@ -17,46 +19,39 @@
         android:text="@string/btn_back"
         android:backgroundTint="@color/black"
         android:textColor="@color/white"
-        android:layout_marginBottom="70dp"
-        />
+        android:layout_marginBottom="20dp" />
 
+    <Button
+        android:id="@+id/btnDatePicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Odaberi datum"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/white"
+        android:layout_marginBottom="10dp"/>
 
+    <TextView
+        android:id="@+id/tvDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="25dp" />
 
-        <Button
-            android:id="@+id/btnDatePicker"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Odaberi datum"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white"
-            android:layout_marginBottom="20dp"
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu" >
 
-            />
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:layout_gravity="center"
-            android:textSize="25dp"
-            android:layout_marginBottom="15dp"/>
-
-        <com.google.android.material.textfield.TextInputLayout
+        <AutoCompleteTextView
+            android:id="@+id/auto_complete"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
-            >
+            android:hint="Odaberite interval prikaza"
+            android:inputType="none" />
 
-            <AutoCompleteTextView
-                android:id="@+id/auto_complete"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Odaberite interval prikaza"
-                android:inputType="none"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/tvInvalidDate"
@@ -70,12 +65,10 @@
         android:layout_marginTop="60dp"
         android:visibility="gone" />
 
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/chart"
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-
-            />
-
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 </LinearLayout>

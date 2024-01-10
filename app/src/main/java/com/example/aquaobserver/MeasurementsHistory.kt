@@ -42,37 +42,36 @@ import java.time.LocalTime
 import java.util.Calendar
 import java.util.Locale
 
-
 class MeasurementsHistory : AppCompatActivity() {
-
     lateinit var lineChart: LineChart
-    private val xValues1: List<String> = listOf("0:00", "1:00", "2:00", "3:00", "4:00", "5:00",
+    private val xValues1: List<String> = listOf (
+        "0:00", "1:00", "2:00", "3:00", "4:00", "5:00",
         "6:00", "7:00", "8:00", "9:00", "10:00", "11:00",
         "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
-        "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00")
+        "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00"
+    )
 
     private var itemSelected: Any? = null
     private var GlobalStartHour = 0
     private var GlobalEndHour = 0
 
-    val BASE_URL = "http://10.0.2.2:8000/"
+    val BASE_URL = "https://polliwog-enormous-walrus.ngrok-free.app/"
+    // val BASE_URL = "http://10.0.2.2:8000/"
 
     private lateinit var tvDatePicker: TextView
     private lateinit var btnDatePicker: Button
     private lateinit var tvInvalidDate: TextView
 
     private val handler = Handler()
-    private val delayMillis: Long = 10000 // 10 seconds
+    private val delayMillis: Long = 60_000 // 60 seconds
 
     private val fetchThresholdRunnable = object : Runnable {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun run() {
-            Log.d("MeasurementsHistory", "Update")
             prepareLaunch(tvDatePicker.text.toString())
             handler.postDelayed(this, delayMillis)
         }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,11 +98,8 @@ class MeasurementsHistory : AppCompatActivity() {
         }
 
         btnDatePicker.setOnClickListener {
-
             DatePickerDialog(this, datePicker, myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show()
         }
-
-
 
         val items = listOf(
             "Cijeli dan",
@@ -113,17 +109,12 @@ class MeasurementsHistory : AppCompatActivity() {
             "15:00 do 16:00", "16:00 do 17:00", "17:00 do 18:00", "18:00 do 19:00", "19:00 do 20:00",
             "20:00 do 21:00", "21:00 do 22:00", "22:00 do 23:00", "23:00 do 24:00"
         )
-
         val autoComplete : AutoCompleteTextView = findViewById(R.id.auto_complete)
-
         val adapter = ArrayAdapter(this, R.layout.list_item,items)
-
         autoComplete.setAdapter(adapter)
-
         val currentHour = (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1) % 24
         val defaultHourRange = String.format("%02d:00 do %02d:00", currentHour, (currentHour + 1) % 24)
         autoComplete.setText(defaultHourRange, false)
-
         autoComplete.onItemClickListener = AdapterView.OnItemClickListener { _, _, _, _ ->
             itemSelected = autoComplete.text.toString()
             Toast.makeText(this, "Item: $itemSelected", Toast.LENGTH_SHORT).show()
@@ -132,21 +123,15 @@ class MeasurementsHistory : AppCompatActivity() {
         }
         itemSelected = autoComplete.text.toString()
         prepareLaunch(LocalDate.now().toString())
-
         handler.post(fetchThresholdRunnable)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateLable(myCalendar: Calendar) {
-
         val myFormat = "yyyy-MM-dd"
         val sdf=SimpleDateFormat(myFormat, Locale("HR"))
         tvDatePicker.setText(sdf.format(myCalendar.time))
         prepareLaunch(tvDatePicker.text.toString())
-
-
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -163,29 +148,20 @@ class MeasurementsHistory : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createLineChart(readings: List<DateReading>) {
-
         lineChart = findViewById(R.id.chart)
-
-
         if (readings.isEmpty()) {
-            // If the list is empty, hide the LineChart
             lineChart.visibility = View.GONE
             tvInvalidDate.visibility = View.VISIBLE
             lineChart.invalidate()
             return
         } else {
-            // If the list is not empty, make sure LineChart is visible
             lineChart.visibility = View.VISIBLE
             tvInvalidDate.visibility = View.GONE
             lineChart.invalidate()
         }
-
-
         lineChart.axisRight.setDrawLabels(false)
         lineChart.description = null
         lineChart.highlightValue(null)
-
-
 
         val xAxis: XAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
@@ -204,12 +180,11 @@ class MeasurementsHistory : AppCompatActivity() {
 
         val entries1: MutableList<Entry> = mutableListOf()
 
-        if(itemSelected == "Cijeli dan" || itemSelected == null){
+        if(itemSelected == "Cijeli dan" || itemSelected == null) {
             xAxis.valueFormatter = IndexAxisValueFormatter(xValues1)
             xAxis.axisMinimum = 0f
             xAxis.axisMaximum = 24f
             xAxis.labelCount = 6
-
             readings.forEachIndexed { index, reading ->
                 val time = LocalTime.parse(reading.time)
                 if (time.minute == 0 || reading.time == "23:58:00") {
@@ -223,7 +198,6 @@ class MeasurementsHistory : AppCompatActivity() {
             val (startHour, endHour )= matchResult?.destructured?.let { (start, end) ->
                 Pair(start.toInt(), end.toInt())
             } ?: run { return }
-
             GlobalEndHour = endHour
             GlobalStartHour = startHour
             var xValues2: List<String> = mutableListOf<String>().apply {
@@ -232,31 +206,25 @@ class MeasurementsHistory : AppCompatActivity() {
                 }
                 add(String.format("%02d:00", endHour))
             }
-            Log.d("MeasurementsHistory", "V: " + xValues2.toString())
             xAxis.valueFormatter = IndexAxisValueFormatter(xValues2)
             xAxis.axisMinimum = 0f
             xAxis.axisMaximum = 60f
             xAxis.labelCount = 6
-
-            readings.forEachIndexed { index, reading ->
+            readings.forEachIndexed { _, reading ->
                 val time = LocalTime.parse(reading.time)
                 if (time.hour == startHour || (time.hour == endHour && time.minute == 0)) {
-                    if(time.minute == 0) {
-                        if(time.hour == startHour){
+                    if (time.minute == 0) {
+                        if (time.hour == startHour) {
                             entries1.add(Entry(0f + time.second.toFloat()/60f, reading.waterLevel.toFloat()))
-                        }else{
+                        } else {
                             entries1.add(Entry(60f + time.second.toFloat()/60f, reading.waterLevel.toFloat()))
                         }
-                    }else {
+                    } else {
                         entries1.add(Entry(time.minute.toFloat() + time.second.toFloat()/60f, reading.waterLevel.toFloat()))
                     }
                 }
-
             }
-
         }
-
-
 
         val dataSet1 = LineDataSet(entries1, "Razina vode")
         dataSet1.setDrawValues(false)
@@ -272,10 +240,9 @@ class MeasurementsHistory : AppCompatActivity() {
         legend.xOffset = 90f
 
 
-        var markerView:CustomMarkerView = CustomMarkerView(this, R.layout.marker_view)
+        var markerView = CustomMarkerView(this, R.layout.marker_view)
         markerView.chartView = lineChart
         lineChart.marker = markerView
-
 
         lineChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onValueSelected(e: Entry?, h: Highlight?) {
@@ -285,9 +252,7 @@ class MeasurementsHistory : AppCompatActivity() {
                     lineChart.invalidate()
                 }
             }
-
-            override fun onNothingSelected() {
-            }
+            override fun onNothingSelected() {}
         })
 
         val lineData = LineData(dataSet1)
@@ -307,12 +272,11 @@ class MeasurementsHistory : AppCompatActivity() {
             .baseUrl(BASE_URL)
             .build()
             .create(ApiInterface::class.java)
-
         return try {
             val apiResponse = retrofitBuilder.getDateReadings(date)
             apiResponse.data
         } catch (e: Exception) {
-            emptyList() // or throw an exception if needed
+            emptyList()
         }
     }
 
@@ -334,23 +298,17 @@ class MeasurementsHistory : AppCompatActivity() {
                 val seconds = (((entryX % 1) * 100) * 0.6).toInt()
                 return String.format("%02d:%02d:%02d", hour, minute, seconds)
             }
-
         }
     }
 }
 
 class CustomMarkerView(context: Context, layoutResource: Int) : MarkerView(context, layoutResource) {
-
     private val tvContent: TextView = findViewById(R.id.tvContent)
     fun setEntry(entry: Entry, time: String) {
         tvContent.text = "Vrijeme: ${time} \nRazina vode: ${entry.y.toString()}%"
-        Log.d("MeasurementsHistory", "E " + entry.y)
     }
 
-
-
-    override fun refreshContent(entry: Entry?, highlight: Highlight?) {
-    }
+    override fun refreshContent(entry: Entry?, highlight: Highlight?) {}
 
     override fun getOffset(): MPPointF {
         return MPPointF(-width / 2f, -height.toFloat())
