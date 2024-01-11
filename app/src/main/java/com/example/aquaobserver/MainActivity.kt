@@ -74,6 +74,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         maxVolumeResultTv.text = maxVolume.toString() + "L"
         btnChangeCriticalLevel.setOnClickListener(this)
         btnMeasurementHistory.setOnClickListener(this)
+        btnCalibrate.setOnClickListener(this)
 
         askNotificationPermission()
 
@@ -150,6 +151,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 response.enqueue(object : Callback<Calibrate> {
                     override fun onResponse(call: Call<Calibrate>, response: Response<Calibrate>) {
                         if (response.isSuccessful) {
+                            Toast.makeText(this@MainActivity, "Calibrate started", Toast.LENGTH_SHORT).show()
                             Log.d("calibrate", response.message())
                         } else {
                             Log.d("calibrate", "${response.code()} - ${response.message()}")
@@ -211,7 +213,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         Log.d("MainActivity", "Threshold: $userThreshold")
                         criticalLevelResultTv.text = userThreshold.toInt().toString() + "%"
                         criticalLevelCase()
-
                     } else {
                         Log.d("MainActivity", "Response body is null.")
                     }
